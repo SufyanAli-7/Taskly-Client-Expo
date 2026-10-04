@@ -8,7 +8,12 @@ import { storage } from '@/utils/storage';
 // 2. If EXPO_PUBLIC_API_URL is explicitly provided: use it
 // 3. Fallback: Android emulator (10.0.2.2) or localhost for web/iOS
 const getDefaultBaseUrl = () => {
-  // Auto-detect host machine IP from Expo Go connection
+  // 1. Explicitly configured API URL (.env) has the highest priority
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // 2. Fallback: Auto-detect computer IP when developing locally with Expo Go
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const ip = hostUri.split(':')[0];
@@ -17,10 +22,7 @@ const getDefaultBaseUrl = () => {
     }
   }
 
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-
+  // 3. Fallback: Android emulator
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:8000';
   }
