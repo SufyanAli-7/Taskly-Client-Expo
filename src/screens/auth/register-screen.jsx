@@ -9,12 +9,15 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { useAuth } from '@/context/auth-context';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+
+const logoSource = require('../../../assets/Glossy 3D Task List Icon.png');
 
 export default function RegisterScreen() {
   const { register, login, isAuthenticating } = useAuth();
@@ -96,9 +99,11 @@ export default function RegisterScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="person-add" size={32} color={colors.primary} />
-            </View>
+            <Image
+              source={logoSource}
+              style={styles.logoImage}
+              contentFit="contain"
+            />
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
               Sign up to start organizing and managing your todos
@@ -246,19 +251,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 22,
   },
-  logoBadge: {
-    width: 64,
-    height: 64,
+  logoImage: {
+    width: 78,
+    height: 78,
     borderRadius: 20,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 14,
-    elevation: 3,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
   },
   title: {
     fontSize: 26,

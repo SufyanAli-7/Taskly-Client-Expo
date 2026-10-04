@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { Redirect } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import { useAuth } from '@/context/auth-context';
 import { colors } from '@/theme/colors';
+
+const logoSource = require('../../assets/Glossy 3D Task List Icon.png');
 
 export default function IndexRoute() {
   const { user, token, isLoading } = useAuth();
@@ -11,10 +13,12 @@ export default function IndexRoute() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.logoBadge}>
-          <Ionicons name="checkbox" size={44} color={colors.primary} />
-        </View>
-        <Text style={styles.appName}>Todo App</Text>
+        <Image
+          source={logoSource}
+          style={styles.logoImage}
+          contentFit="contain"
+        />
+        <Text style={styles.appName}>Taskly</Text>
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       </View>
     );
@@ -34,14 +38,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoBadge: {
-    width: 80,
-    height: 80,
+  logoImage: {
+    width: 88,
+    height: 88,
     borderRadius: 24,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   appName: {
     fontSize: 22,

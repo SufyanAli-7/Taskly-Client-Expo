@@ -9,12 +9,15 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { useAuth } from '@/context/auth-context';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+
+const logoSource = require('../../../assets/Glossy 3D Task List Icon.png');
 
 export default function LoginScreen() {
   const { login, isAuthenticating } = useAuth();
@@ -71,9 +74,11 @@ export default function LoginScreen() {
         >
           {/* Header & Logo Badge */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="checkbox" size={36} color={colors.primary} />
-            </View>
+            <Image
+              source={logoSource}
+              style={styles.logoImage}
+              contentFit="contain"
+            />
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>
               Sign in to access your tasks and stay productive
@@ -172,19 +177,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 26,
   },
-  logoBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: 20,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 82,
+    height: 82,
+    borderRadius: 22,
     marginBottom: 16,
-    elevation: 3,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
   },
   title: {
     fontSize: 26,
