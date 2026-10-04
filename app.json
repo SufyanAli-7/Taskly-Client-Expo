@@ -11,6 +11,7 @@
       "icon": "./assets/Glossy 3D Task List Icon.png"
     },
     "android": {
+      "package": "com.sufyanali.taskly",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/Glossy 3D Task List Icon.png"
