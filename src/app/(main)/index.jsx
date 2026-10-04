@@ -1,6 +1,6 @@
 import React from 'react';
-import HomeScreen from '@/screens/main/home-screen';
+import TodoListScreen from '@/screens/todos/todo-list-screen';
 
 export default function MainRoute() {
-  return <HomeScreen />;
+  return <TodoListScreen />;
 }

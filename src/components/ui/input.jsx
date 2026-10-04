@@ -24,6 +24,8 @@ const Input = forwardRef(function Input(
     returnKeyType,
     onSubmitEditing,
     blurOnSubmit,
+    multiline = false,
+    numberOfLines,
     ...rest
   },
   ref
@@ -38,6 +40,7 @@ const Input = forwardRef(function Input(
       <View
         style={[
           styles.inputContainer,
+          multiline && styles.inputContainerMultiline,
           isFocused && styles.inputContainerFocused,
           error && styles.inputContainerError,
           !editable && styles.inputContainerDisabled,
@@ -74,6 +77,8 @@ const Input = forwardRef(function Input(
           onSubmitEditing={onSubmitEditing}
           blurOnSubmit={blurOnSubmit}
           underlineColorAndroid="transparent"
+          multiline={multiline}
+          numberOfLines={numberOfLines}
           onFocus={(e) => {
             setIsFocused(true);
             rest.onFocus?.(e);
@@ -82,7 +87,7 @@ const Input = forwardRef(function Input(
             setIsFocused(false);
             rest.onBlur?.(e);
           }}
-          style={[styles.input, inputStyle]}
+          style={[styles.input, multiline && styles.inputMultiline, inputStyle]}
           {...rest}
         />
 
@@ -137,6 +142,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 52,
   },
+  inputContainerMultiline: {
+    height: undefined,
+    minHeight: 96,
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+  },
   inputContainerFocused: {
     borderColor: colors.primary,
   },
@@ -159,6 +170,12 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'android' ? 6 : 0,
     includeFontPadding: false,
     textAlignVertical: 'center',
+  },
+  inputMultiline: {
+    textAlignVertical: 'top',
+    minHeight: 76,
+    paddingVertical: 0,
+    includeFontPadding: false,
   },
   eyeButton: {
     padding: 6,
