@@ -8,10 +8,12 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '@/theme/colors';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
@@ -34,6 +36,8 @@ export default function TodoFormModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [dateObj, setDateObj] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [priority, setPriority] = useState('medium');
   const [imageUri, setImageUri] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState('');
@@ -46,6 +50,8 @@ export default function TodoFormModal({
         setTitle(initialData.title || '');
         setDescription(initialData.description || '');
         setDueDate(initialData.dueDate || '');
+        const parsed = initialData.dueDate ? new Date(initialData.dueDate) : null;
+        setDateObj(parsed && !isNaN(parsed.getTime()) ? parsed : new Date());
         setPriority(initialData.priority || 'medium');
         setExistingImageUrl(initialData.imageURL || '');
         setImageUri(null);
@@ -53,13 +59,47 @@ export default function TodoFormModal({
         setTitle('');
         setDescription('');
         setDueDate('');
+        setDateObj(new Date());
         setPriority('medium');
         setImageUri(null);
         setExistingImageUrl('');
       }
+      setShowDatePicker(false);
       setError('');
     }
   }, [visible, initialData]);
+
+  // DatePicker Value & Dismiss Handlers
+  const handleDateValueChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    const dateToUse = selectedDate || (event?.nativeEvent?.timestamp ? new Date(event.nativeEvent.timestamp) : null);
+    if (dateToUse) {
+      setDateObj(dateToUse);
+      const formatted = dateToUse.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      setDueDate(formatted);
+    }
+  };
+
+  const handleDateDismiss = () => {
+    setShowDatePicker(false);
+  };
+
+  // Quick Date Shortcut buttons (Today, Tomorrow, +7 Days)
+  const handleQuickDate = (daysFromNow) => {
+    const target = new Date();
+    target.setDate(target.getDate() + daysFromNow);
+    setDateObj(target);
+    const formatted = target.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    setDueDate(formatted);
+  };
 
   // Pick an image using expo-image-picker
   const handlePickImage = async () => {
@@ -157,14 +197,77 @@ export default function TodoFormModal({
               autoCapitalize="sentences"
             />
 
-            {/* Due Date */}
-            <Input
-              label="Due Date (Optional)"
-              placeholder="e.g. Tomorrow, 25 Oct, 5:00 PM"
-              value={dueDate}
-              onChangeText={setDueDate}
-              leftIcon="calendar-outline"
-            />
+            {/* Due Date Picker */}
+            <View style={styles.fieldSection}>
+              <Text style={styles.sectionLabel}>Due Date (Optional)</Text>
+
+              <Pressable
+                onPress={() => setShowDatePicker(true)}
+                style={[styles.dateTrigger, Boolean(dueDate) && styles.dateTriggerActive]}
+              >
+                <View style={styles.dateLeft}>
+                  <Ionicons
+                    name="calendar"
+                    size={20}
+                    color={dueDate ? colors.primary : colors.textTertiary}
+                  />
+                  <Text style={[styles.dateValueText, !dueDate && styles.datePlaceholderText]}>
+                    {dueDate || 'Tap to choose due date'}
+                  </Text>
+                </View>
+
+                {dueDate ? (
+                  <Pressable
+                    onPress={() => {
+                      setDueDate('');
+                      setDateObj(new Date());
+                    }}
+                    hitSlop={8}
+                    style={styles.clearDateBtn}
+                  >
+                    <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                  </Pressable>
+                ) : (
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                )}
+              </Pressable>
+
+              {/* Quick Preset Date Chips */}
+              <View style={styles.quickDateRow}>
+                <Pressable
+                  onPress={() => handleQuickDate(0)}
+                  style={styles.quickDatePill}
+                >
+                  <Text style={styles.quickDateText}>Today</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => handleQuickDate(1)}
+                  style={styles.quickDatePill}
+                >
+                  <Text style={styles.quickDateText}>Tomorrow</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => handleQuickDate(7)}
+                  style={styles.quickDatePill}
+                >
+                  <Text style={styles.quickDateText}>+7 Days</Text>
+                </Pressable>
+              </View>
+
+              {/* Native Android / iOS DateTimePicker */}
+              {showDatePicker && (
+                <DateTimePicker
+                  value={dateObj}
+                  mode="date"
+                  display="default"
+                  minimumDate={new Date()}
+                  onValueChange={handleDateValueChange}
+                  onDismiss={handleDateDismiss}
+                />
+              )}
+            </View>
 
             {/* Priority Selector */}
             <View style={styles.prioritySection}>
@@ -279,11 +382,62 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 20,
   },
+  fieldSection: {
+    marginBottom: 18,
+  },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 8,
+  },
+  dateTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+  dateTriggerActive: {
+    borderColor: colors.primary,
+  },
+  dateLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  dateValueText: {
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  datePlaceholderText: {
+    color: colors.textTertiary,
+    fontWeight: '400',
+  },
+  clearDateBtn: {
+    padding: 4,
+  },
+  quickDateRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  quickDatePill: {
+    backgroundColor: colors.surfaceVariant,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  quickDateText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   prioritySection: {
     marginBottom: 18,
