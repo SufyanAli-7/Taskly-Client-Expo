@@ -280,7 +280,7 @@ export default function TodoListScreen() {
               {searchQuery ? (
                 <View style={styles.searchStatusRow}>
                   <Text style={styles.searchStatusText} numberOfLines={1}>
-                    Found {filteredTodos.length} {filteredTodos.length === 1 ? 'task' : 'tasks'} for "{searchQuery}"
+                    Found {filteredTodos.length} {filteredTodos.length === 1 ? 'task' : 'tasks'} for &quot;{searchQuery}&quot;
                   </Text>
                   <Pressable
                     onPress={() => setSearchQuery('')}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,9 +6,7 @@ import {
   Modal,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   Alert,
-  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -17,6 +15,32 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '@/theme/colors';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+
+const formatDatePart = (date) => {
+  if (!date) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const formatTimePart = (date) => {
+  if (!date) return '';
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+const formatFullDateTime = (date, withTime) => {
+  if (!date) return '';
+  const d = formatDatePart(date);
+  if (!withTime) return d;
+  const t = formatTimePart(date);
+  return `${d}, ${t}`;
+};
 
 const PRIORITIES = [
   { key: 'low', label: 'Low', color: '#10B981', bg: '#ECFDF5' },
@@ -37,7 +61,9 @@ export default function TodoFormModal({
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dateObj, setDateObj] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [hasTime, setHasTime] = useState(false);
+  const [pickerMode, setPickerMode] = useState(null); // 'date' | 'time' | null
+  const isSequenceRef = useRef(false);
   const [priority, setPriority] = useState('medium');
   const [imageUri, setImageUri] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState('');
@@ -51,7 +77,9 @@ export default function TodoFormModal({
         setDescription(initialData.description || '');
         setDueDate(initialData.dueDate || '');
         const parsed = initialData.dueDate ? new Date(initialData.dueDate) : null;
-        setDateObj(parsed && !isNaN(parsed.getTime()) ? parsed : new Date());
+        const valid = Boolean(parsed && !isNaN(parsed.getTime()));
+        setDateObj(valid ? parsed : new Date());
+        setHasTime(Boolean(valid && (/:\d{2}/i.test(initialData.dueDate) || /AM|PM/i.test(initialData.dueDate))));
         setPriority(initialData.priority || 'medium');
         setExistingImageUrl(initialData.imageURL || '');
         setImageUri(null);
@@ -60,45 +88,97 @@ export default function TodoFormModal({
         setDescription('');
         setDueDate('');
         setDateObj(new Date());
+        setHasTime(false);
         setPriority('medium');
         setImageUri(null);
         setExistingImageUrl('');
       }
-      setShowDatePicker(false);
+      setPickerMode(null);
+      isSequenceRef.current = false;
       setError('');
     }
   }, [visible, initialData]);
 
-  // DatePicker Value & Dismiss Handlers
-  const handleDateValueChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    const dateToUse = selectedDate || (event?.nativeEvent?.timestamp ? new Date(event.nativeEvent.timestamp) : null);
-    if (dateToUse) {
-      setDateObj(dateToUse);
-      const formatted = dateToUse.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-      setDueDate(formatted);
+  // Open Date picker (optionally auto-transition to Time picker after date is picked)
+  const openDatePicker = (isSequence = false) => {
+    isSequenceRef.current = isSequence;
+    setPickerMode('date');
+  };
+
+  // Open Time picker directly
+  const openTimePicker = () => {
+    isSequenceRef.current = false;
+    setPickerMode('time');
+  };
+
+  // DateTimePicker Value Change Handler
+  const handlePickerChange = (event, selectedDate) => {
+    const currentMode = pickerMode;
+    setPickerMode(null);
+
+    const dateToUse =
+      selectedDate ||
+      (event?.nativeEvent?.timestamp ? new Date(event.nativeEvent.timestamp) : null);
+
+    if (!dateToUse) {
+      isSequenceRef.current = false;
+      return;
+    }
+
+    if (currentMode === 'date') {
+      const updated = new Date(dateObj);
+      updated.setFullYear(dateToUse.getFullYear(), dateToUse.getMonth(), dateToUse.getDate());
+      setDateObj(updated);
+      setDueDate(formatFullDateTime(updated, hasTime));
+
+      // If user started from the combined "Set Date & Time" flow, open Time Picker next
+      if (isSequenceRef.current) {
+        isSequenceRef.current = false;
+        setTimeout(() => {
+          setPickerMode('time');
+        }, 300);
+      }
+    } else if (currentMode === 'time') {
+      const updated = new Date(dateObj);
+      updated.setHours(dateToUse.getHours(), dateToUse.getMinutes(), 0, 0);
+      setDateObj(updated);
+      setHasTime(true);
+      setDueDate(formatFullDateTime(updated, true));
+      isSequenceRef.current = false;
     }
   };
 
-  const handleDateDismiss = () => {
-    setShowDatePicker(false);
+  const handlePickerDismiss = () => {
+    setPickerMode(null);
+    isSequenceRef.current = false;
+  };
+
+  // Clear date & time
+  const handleClearDateTime = () => {
+    setDueDate('');
+    setHasTime(false);
+    setDateObj(new Date());
+    isSequenceRef.current = false;
   };
 
   // Quick Date Shortcut buttons (Today, Tomorrow, +7 Days)
   const handleQuickDate = (daysFromNow) => {
     const target = new Date();
     target.setDate(target.getDate() + daysFromNow);
+    if (hasTime) {
+      target.setHours(dateObj.getHours(), dateObj.getMinutes(), 0, 0);
+    }
     setDateObj(target);
-    const formatted = target.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    setDueDate(formatted);
+    setDueDate(formatFullDateTime(target, hasTime));
+  };
+
+  // Quick Time Shortcut buttons (9 AM, 1 PM, 6 PM, 9 PM)
+  const handleQuickTime = (hours, minutes) => {
+    const target = new Date(dateObj);
+    target.setHours(hours, minutes, 0, 0);
+    setDateObj(target);
+    setHasTime(true);
+    setDueDate(formatFullDateTime(target, true));
   };
 
   // Pick an image using expo-image-picker
@@ -197,74 +277,118 @@ export default function TodoFormModal({
               autoCapitalize="sentences"
             />
 
-            {/* Due Date Picker */}
+            {/* Due Date & Time Picker */}
             <View style={styles.fieldSection}>
-              <Text style={styles.sectionLabel}>Due Date (Optional)</Text>
+              <Text style={styles.sectionLabel}>Due Date & Time (Optional)</Text>
 
-              <Pressable
-                onPress={() => setShowDatePicker(true)}
-                style={[styles.dateTrigger, Boolean(dueDate) && styles.dateTriggerActive]}
-              >
-                <View style={styles.dateLeft}>
-                  <Ionicons
-                    name="calendar"
-                    size={20}
-                    color={dueDate ? colors.primary : colors.textTertiary}
-                  />
-                  <Text style={[styles.dateValueText, !dueDate && styles.datePlaceholderText]}>
-                    {dueDate || 'Tap to choose due date'}
-                  </Text>
-                </View>
-
-                {dueDate ? (
+              {!dueDate ? (
+                /* Unselected State: 1-Tap flow that opens Date and then Time */
+                <Pressable
+                  onPress={() => openDatePicker(true)}
+                  style={styles.dateTrigger}
+                >
+                  <View style={styles.dateLeft}>
+                    <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                    <Text style={styles.datePlaceholderText}>Tap to choose Date & Time</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                </Pressable>
+              ) : (
+                /* Selected State: Split interactive cards for Date and Time + Clear */
+                <View style={styles.dateTimeActiveContainer}>
+                  {/* Date Card */}
                   <Pressable
-                    onPress={() => {
-                      setDueDate('');
-                      setDateObj(new Date());
-                    }}
+                    onPress={() => openDatePicker(false)}
+                    style={styles.dateTimeBadge}
+                  >
+                    <Ionicons name="calendar" size={16} color={colors.primary} />
+                    <Text style={styles.dateTimeBadgeText} numberOfLines={1}>
+                      {formatDatePart(dateObj)}
+                    </Text>
+                  </Pressable>
+
+                  {/* Time Card */}
+                  <Pressable
+                    onPress={openTimePicker}
+                    style={[styles.dateTimeBadge, hasTime && styles.dateTimeBadgeHighlight]}
+                  >
+                    <Ionicons
+                      name="time"
+                      size={16}
+                      color={hasTime ? colors.primary : colors.textTertiary}
+                    />
+                    <Text
+                      style={[
+                        styles.dateTimeBadgeText,
+                        !hasTime && styles.dateTimeBadgePlaceholder,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {hasTime ? formatTimePart(dateObj) : 'Add Time'}
+                    </Text>
+                  </Pressable>
+
+                  {/* Clear Button */}
+                  <Pressable
+                    onPress={handleClearDateTime}
                     hitSlop={8}
                     style={styles.clearDateBtn}
                   >
-                    <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                    <Ionicons name="close-circle" size={22} color={colors.textTertiary} />
                   </Pressable>
-                ) : (
-                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-                )}
-              </Pressable>
+                </View>
+              )}
 
-              {/* Quick Preset Date Chips */}
-              <View style={styles.quickDateRow}>
-                <Pressable
-                  onPress={() => handleQuickDate(0)}
-                  style={styles.quickDatePill}
-                >
+              {/* Quick Preset Date & Time Chips */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.quickDateRow}
+                style={styles.quickDateScroll}
+              >
+                <Pressable onPress={() => handleQuickDate(0)} style={styles.quickDatePill}>
                   <Text style={styles.quickDateText}>Today</Text>
                 </Pressable>
 
-                <Pressable
-                  onPress={() => handleQuickDate(1)}
-                  style={styles.quickDatePill}
-                >
+                <Pressable onPress={() => handleQuickDate(1)} style={styles.quickDatePill}>
                   <Text style={styles.quickDateText}>Tomorrow</Text>
                 </Pressable>
 
-                <Pressable
-                  onPress={() => handleQuickDate(7)}
-                  style={styles.quickDatePill}
-                >
+                <Pressable onPress={() => handleQuickDate(7)} style={styles.quickDatePill}>
                   <Text style={styles.quickDateText}>+7 Days</Text>
                 </Pressable>
-              </View>
+
+                <Pressable onPress={() => handleQuickTime(9, 0)} style={styles.quickTimePill}>
+                  <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
+                  <Text style={styles.quickTimeText}>9:00 AM</Text>
+                </Pressable>
+
+                <Pressable onPress={() => handleQuickTime(13, 0)} style={styles.quickTimePill}>
+                  <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
+                  <Text style={styles.quickTimeText}>1:00 PM</Text>
+                </Pressable>
+
+                <Pressable onPress={() => handleQuickTime(18, 0)} style={styles.quickTimePill}>
+                  <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
+                  <Text style={styles.quickTimeText}>6:00 PM</Text>
+                </Pressable>
+
+                <Pressable onPress={() => handleQuickTime(21, 0)} style={styles.quickTimePill}>
+                  <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
+                  <Text style={styles.quickTimeText}>9:00 PM</Text>
+                </Pressable>
+              </ScrollView>
 
               {/* Native Android / iOS DateTimePicker */}
-              {showDatePicker && (
+              {pickerMode && (
                 <DateTimePicker
                   value={dateObj}
-                  mode="date"
+                  mode={pickerMode}
                   display="default"
-                  minimumDate={new Date()}
-                  onValueChange={handleDateValueChange}
-                  onDismiss={handleDateDismiss}
+                  minimumDate={pickerMode === 'date' ? new Date() : undefined}
+                  is24Hour={false}
+                  onValueChange={handlePickerChange}
+                  onDismiss={handlePickerDismiss}
                 />
               )}
             </View>
@@ -402,40 +526,84 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 52,
   },
-  dateTriggerActive: {
-    borderColor: colors.primary,
-  },
   dateLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     flex: 1,
   },
-  dateValueText: {
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
   datePlaceholderText: {
     color: colors.textTertiary,
+    fontSize: 15,
     fontWeight: '400',
   },
+  dateTimeActiveContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dateTimeBadge: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: colors.surfaceVariant,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  dateTimeBadgeHighlight: {
+    borderColor: colors.primary,
+    backgroundColor: colors.card,
+  },
+  dateTimeBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  dateTimeBadgePlaceholder: {
+    color: colors.textTertiary,
+    fontWeight: '500',
+  },
   clearDateBtn: {
-    padding: 4,
+    padding: 6,
+  },
+  quickDateScroll: {
+    marginTop: 8,
   },
   quickDateRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    marginTop: 8,
   },
   quickDatePill: {
     backgroundColor: colors.surfaceVariant,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   quickDateText: {
     fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  quickTimePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  quickTimeText: {
+    fontSize: 11,
     fontWeight: '600',
     color: colors.textSecondary,
   },
