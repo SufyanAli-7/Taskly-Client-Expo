@@ -265,14 +265,33 @@ export default function TodoListScreen() {
                 </View>
               </View>
 
-              {/* Search Bar */}
+              {/* Search Bar with Instant Clear Button */}
               <Input
                 placeholder="Search tasks by title..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 leftIcon="search-outline"
+                onClear={() => setSearchQuery('')}
                 containerStyle={styles.searchContainer}
+                returnKeyType="search"
               />
+
+              {/* Active Search Status Feedback */}
+              {searchQuery ? (
+                <View style={styles.searchStatusRow}>
+                  <Text style={styles.searchStatusText} numberOfLines={1}>
+                    Found {filteredTodos.length} {filteredTodos.length === 1 ? 'task' : 'tasks'} for "{searchQuery}"
+                  </Text>
+                  <Pressable
+                    onPress={() => setSearchQuery('')}
+                    hitSlop={10}
+                    style={styles.clearSearchBtn}
+                  >
+                    <Ionicons name="close-circle" size={15} color={colors.primary} />
+                    <Text style={styles.clearSearchBtnText}>Clear Search</Text>
+                  </Pressable>
+                </View>
+              ) : null}
 
               {/* Filter Tabs */}
               <TodoFilter
@@ -286,20 +305,32 @@ export default function TodoListScreen() {
             <EmptyState
               title={
                 searchQuery
-                  ? 'No matching tasks'
+                  ? `No tasks matching "${searchQuery}"`
                   : activeFilter === 'completed'
                   ? 'No completed tasks yet'
                   : 'No tasks on your list'
               }
               subtitle={
                 searchQuery
-                  ? 'Try searching with another keyword.'
+                  ? 'Tap below to clear search and see all your tasks.'
                   : activeFilter === 'completed'
                   ? 'Complete active tasks to see them here.'
                   : 'Tap the "+" button below to add your first task.'
               }
-              actionTitle={activeFilter === 'all' && !searchQuery ? 'Add Task' : undefined}
-              onAction={activeFilter === 'all' && !searchQuery ? handleOpenCreate : undefined}
+              actionTitle={
+                searchQuery
+                  ? 'Clear Search & View All'
+                  : activeFilter === 'all'
+                  ? 'Add Task'
+                  : undefined
+              }
+              onAction={
+                searchQuery
+                  ? () => setSearchQuery('')
+                  : activeFilter === 'all'
+                  ? handleOpenCreate
+                  : undefined
+              }
             />
           }
         />
@@ -443,7 +474,35 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   searchContainer: {
+    marginBottom: 8,
+  },
+  searchStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
     marginBottom: 12,
+  },
+  searchStatusText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: '500',
+    flex: 1,
+    marginRight: 8,
+  },
+  clearSearchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 8,
+  },
+  clearSearchBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
   fabContainer: {
     position: 'absolute',

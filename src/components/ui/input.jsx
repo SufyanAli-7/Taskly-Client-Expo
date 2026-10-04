@@ -26,6 +26,8 @@ const Input = forwardRef(function Input(
     blurOnSubmit,
     multiline = false,
     numberOfLines,
+    onClear,
+    rightIcon,
     ...rest
   },
   ref
@@ -90,6 +92,16 @@ const Input = forwardRef(function Input(
           style={[styles.input, multiline && styles.inputMultiline, inputStyle]}
           {...rest}
         />
+
+        {onClear && Boolean(value) && (
+          <Pressable onPress={onClear} hitSlop={10} style={styles.clearButton}>
+            <Ionicons name="close-circle" size={19} color={colors.textTertiary} />
+          </Pressable>
+        )}
+
+        {rightIcon && !onClear && (
+          <View style={styles.rightIconContainer}>{rightIcon}</View>
+        )}
 
         {isPassword && (
           <Pressable
@@ -180,6 +192,15 @@ const styles = StyleSheet.create({
   eyeButton: {
     padding: 6,
     marginLeft: 6,
+  },
+  clearButton: {
+    padding: 6,
+    marginLeft: 4,
+  },
+  rightIconContainer: {
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorRow: {
     flexDirection: 'row',
