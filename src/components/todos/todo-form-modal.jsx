@@ -7,7 +7,9 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
@@ -68,6 +70,10 @@ export default function TodoFormModal({
   const [imageUri, setImageUri] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState('');
   const [error, setError] = useState('');
+
+  // Safe area bottom inset for modal sheet (ensures submit button is above Android navigation bar)
+  const insets = useSafeAreaInsets();
+  const modalBottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 28 : 16) + 12;
 
   // Reset or populate fields when modal opens
   useEffect(() => {
@@ -237,7 +243,7 @@ export default function TodoFormModal({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <View style={styles.sheetContainer}>
+        <View style={[styles.sheetContainer, { paddingBottom: modalBottomPadding }]}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>

@@ -8,8 +8,9 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -186,6 +187,11 @@ export default function TodoListScreen() {
   // Progress percentage
   const progressPercent = counts.all > 0 ? Math.round((counts.completed / counts.all) * 100) : 0;
 
+  // Safe area bottom insets for FAB and list padding (prevents overlap with Android system nav bar)
+  const insets = useSafeAreaInsets();
+  const fabBottomOffset = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 16) + 16;
+  const listBottomPadding = fabBottomOffset + 80;
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* App Header */}
@@ -227,7 +233,7 @@ export default function TodoListScreen() {
               onDelete={handleDelete}
             />
           )}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: listBottomPadding }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={
@@ -337,7 +343,7 @@ export default function TodoListScreen() {
       )}
 
       {/* Floating Action Button (FAB) */}
-      <View style={styles.fabContainer} pointerEvents="box-none">
+      <View style={[styles.fabContainer, { bottom: fabBottomOffset }]} pointerEvents="box-none">
         <Pressable
           onPress={handleOpenCreate}
           style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
