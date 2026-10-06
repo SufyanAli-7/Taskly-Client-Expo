@@ -71,10 +71,25 @@ export default function TodoFormModal({
   const [imageUri, setImageUri] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState('');
   const [error, setError] = useState('');
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  // Safe area bottom inset for modal sheet (ensures submit button is above Android navigation bar)
+  // Safe area bottom inset for modal sheet (ensures submit button is above Android navigation bar when keyboard is closed)
   const insets = useSafeAreaInsets();
   const modalBottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 28 : 16) + 12;
+
+  // Track keyboard visibility so we eliminate bottom padding when keyboard is up
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setIsKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Reset or populate fields when modal opens
   useEffect(() => {
@@ -264,7 +279,12 @@ export default function TodoFormModal({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <View style={[styles.sheetContainer, { paddingBottom: modalBottomPadding }]}>
+        <View
+          style={[
+            styles.sheetContainer,
+            { paddingBottom: isKeyboardVisible ? 0 : modalBottomPadding },
+          ]}
+        >
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>
@@ -509,7 +529,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
-    paddingBottom: 24,
     elevation: 10,
   },
   header: {
