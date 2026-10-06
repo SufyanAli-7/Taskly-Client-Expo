@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -30,25 +30,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Track keyboard appearance to give dynamic bottom clearance on Android & iOS
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const validate = () => {
     const errs = {};
@@ -89,10 +70,7 @@ export default function LoginScreen() {
       >
         <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 36 : 48 },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="none"
           contentInsetAdjustmentBehavior="automatic"
@@ -160,11 +138,6 @@ export default function LoginScreen() {
               textContentType="password"
               returnKeyType="done"
               onSubmitEditing={handleLogin}
-              onFocus={() => {
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollToEnd({ animated: true });
-                }, 120);
-              }}
               error={errors.password}
             />
 
@@ -203,25 +176,25 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 36,
-    paddingBottom: 48,
+    paddingTop: 28,
+    paddingBottom: 36,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 26,
+    marginBottom: 20,
   },
   logoImage: {
-    width: 82,
-    height: 82,
-    borderRadius: 22,
-    marginBottom: 16,
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
@@ -250,7 +223,7 @@ const styles = StyleSheet.create({
   formCard: {
     backgroundColor: colors.card,
     borderRadius: 20,
-    padding: 22,
+    padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
     elevation: 2,
@@ -258,7 +231,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   submitButton: {
     marginTop: 8,

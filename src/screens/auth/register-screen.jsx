@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -36,25 +36,6 @@ export default function RegisterScreen() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Track keyboard appearance to give dynamic bottom clearance on Android & iOS
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const validate = () => {
     const errs = {};
@@ -114,10 +95,7 @@ export default function RegisterScreen() {
       >
         <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 40 : 48 },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="none"
           contentInsetAdjustmentBehavior="automatic"
@@ -146,7 +124,7 @@ export default function RegisterScreen() {
             </View>
           ) : null}
 
-          {/* Success Message Banner */}
+          {/* Success Banner */}
           {successMessage ? (
             <View style={styles.successBox}>
               <Ionicons name="checkmark-circle" size={20} color={colors.success} />
@@ -214,11 +192,6 @@ export default function RegisterScreen() {
               returnKeyType="next"
               onSubmitEditing={() => confirmPasswordRef.current?.focus()}
               blurOnSubmit={false}
-              onFocus={() => {
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollTo({ y: 160, animated: true });
-                }, 120);
-              }}
               error={errors.password}
             />
 
@@ -239,11 +212,6 @@ export default function RegisterScreen() {
               textContentType="newPassword"
               returnKeyType="done"
               onSubmitEditing={handleRegister}
-              onFocus={() => {
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollToEnd({ animated: true });
-                }, 120);
-              }}
               error={errors.confirmPassword}
             />
 
@@ -282,25 +250,25 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 48,
+    paddingTop: 20,
+    paddingBottom: 36,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 22,
+    marginBottom: 16,
   },
   logoImage: {
-    width: 78,
-    height: 78,
-    borderRadius: 20,
-    marginBottom: 14,
+    width: 68,
+    height: 68,
+    borderRadius: 18,
+    marginBottom: 10,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
@@ -346,7 +314,7 @@ const styles = StyleSheet.create({
   formCard: {
     backgroundColor: colors.card,
     borderRadius: 20,
-    padding: 22,
+    padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
     elevation: 2,
@@ -354,7 +322,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   submitButton: {
     marginTop: 6,
