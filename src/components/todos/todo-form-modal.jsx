@@ -9,7 +9,6 @@ import {
   Alert,
   Platform,
   Keyboard,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -265,11 +264,7 @@ export default function TodoFormModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios'}
-        style={styles.backdrop}
-      >
+      <View style={styles.backdrop}>
         <View style={styles.sheetContainer}>
           {/* Header */}
           <View style={styles.header}>
@@ -282,6 +277,7 @@ export default function TodoFormModal({
           </View>
 
           <ScrollView
+            style={styles.scrollView}
             contentContainerStyle={[styles.scrollBody, { paddingBottom: modalBottomPadding }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -499,7 +495,7 @@ export default function TodoFormModal({
             </View>
           </ScrollView>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -514,8 +510,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    height: '88%',
+    maxHeight: '88%',
     elevation: 10,
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
