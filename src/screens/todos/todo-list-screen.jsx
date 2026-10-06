@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -236,6 +237,7 @@ export default function TodoListScreen() {
           contentContainerStyle={[styles.listContent, { paddingBottom: listBottomPadding }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -277,7 +279,11 @@ export default function TodoListScreen() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 leftIcon="search-outline"
-                onClear={() => setSearchQuery('')}
+                onClear={() => {
+                  setSearchQuery('');
+                  Keyboard.dismiss();
+                }}
+                onSubmitEditing={Keyboard.dismiss}
                 containerStyle={styles.searchContainer}
                 returnKeyType="search"
               />
@@ -289,7 +295,10 @@ export default function TodoListScreen() {
                     Found {filteredTodos.length} {filteredTodos.length === 1 ? 'task' : 'tasks'} for &quot;{searchQuery}&quot;
                   </Text>
                   <Pressable
-                    onPress={() => setSearchQuery('')}
+                    onPress={() => {
+                      setSearchQuery('');
+                      Keyboard.dismiss();
+                    }}
                     hitSlop={10}
                     style={styles.clearSearchBtn}
                   >
