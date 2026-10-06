@@ -72,25 +72,10 @@ export default function TodoFormModal({
   const [imageUri, setImageUri] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState('');
   const [error, setError] = useState('');
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  // Safe area bottom inset for modal sheet (ensures submit button is above Android navigation bar when keyboard is closed)
+  // Safe area bottom inset for modal content (ensures submit button is above Android navigation bar)
   const insets = useSafeAreaInsets();
-  const modalBottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 28 : 16) + 12;
-
-  // Track keyboard visibility so we eliminate bottom padding when keyboard is up
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, () => setIsKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setIsKeyboardVisible(false));
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
+  const modalBottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 28 : 16) + 16;
 
   // Reset or populate fields when modal opens
   useEffect(() => {
@@ -277,18 +262,15 @@ export default function TodoFormModal({
       visible={visible}
       animationType="slide"
       transparent
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios'}
         style={styles.backdrop}
       >
-        <View
-          style={[
-            styles.sheetContainer,
-            { paddingBottom: isKeyboardVisible ? 0 : modalBottomPadding },
-          ]}
-        >
+        <View style={styles.sheetContainer}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>
@@ -300,7 +282,7 @@ export default function TodoFormModal({
           </View>
 
           <ScrollView
-            contentContainerStyle={styles.scrollBody}
+            contentContainerStyle={[styles.scrollBody, { paddingBottom: modalBottomPadding }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
