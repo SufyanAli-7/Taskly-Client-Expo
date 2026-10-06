@@ -8,6 +8,7 @@ import {
   Pressable,
   Alert,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -107,14 +108,28 @@ export default function TodoFormModal({
 
   // Open Date picker (optionally auto-transition to Time picker after date is picked)
   const openDatePicker = (isSequence = false) => {
+    Keyboard.dismiss();
     isSequenceRef.current = isSequence;
-    setPickerMode('date');
+    if (Platform.OS === 'android') {
+      setTimeout(() => {
+        setPickerMode('date');
+      }, 100);
+    } else {
+      setPickerMode('date');
+    }
   };
 
   // Open Time picker directly
   const openTimePicker = () => {
+    Keyboard.dismiss();
     isSequenceRef.current = false;
-    setPickerMode('time');
+    if (Platform.OS === 'android') {
+      setTimeout(() => {
+        setPickerMode('time');
+      }, 100);
+    } else {
+      setPickerMode('time');
+    }
   };
 
   // DateTimePicker Value Change Handler
@@ -161,6 +176,7 @@ export default function TodoFormModal({
 
   // Clear date & time
   const handleClearDateTime = () => {
+    Keyboard.dismiss();
     setDueDate('');
     setHasTime(false);
     setDateObj(new Date());
@@ -169,6 +185,7 @@ export default function TodoFormModal({
 
   // Quick Date Shortcut buttons (Today, Tomorrow, +7 Days)
   const handleQuickDate = (daysFromNow) => {
+    Keyboard.dismiss();
     const target = new Date();
     target.setDate(target.getDate() + daysFromNow);
     if (hasTime) {
@@ -180,6 +197,7 @@ export default function TodoFormModal({
 
   // Quick Time Shortcut buttons (9 AM, 1 PM, 6 PM, 9 PM)
   const handleQuickTime = (hours, minutes) => {
+    Keyboard.dismiss();
     const target = new Date(dateObj);
     target.setHours(hours, minutes, 0, 0);
     setDateObj(target);
@@ -189,6 +207,7 @@ export default function TodoFormModal({
 
   // Pick an image using expo-image-picker
   const handlePickImage = async () => {
+    Keyboard.dismiss();
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
@@ -213,11 +232,13 @@ export default function TodoFormModal({
   };
 
   const handleRemoveImage = () => {
+    Keyboard.dismiss();
     setImageUri(null);
     setExistingImageUrl('');
   };
 
   const handleSubmit = () => {
+    Keyboard.dismiss();
     if (!title.trim()) {
       setError('Title is required');
       return;
@@ -408,7 +429,10 @@ export default function TodoFormModal({
                   return (
                     <Pressable
                       key={p.key}
-                      onPress={() => setPriority(p.key)}
+                      onPress={() => {
+                        Keyboard.dismiss();
+                        setPriority(p.key);
+                      }}
                       style={[
                         styles.priorityPill,
                         { borderColor: p.color },
