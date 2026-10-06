@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,6 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -22,6 +24,7 @@ const logoSource = require('../../../assets/Glossy 3D Task List Icon.png');
 export default function RegisterScreen() {
   const { register, login, isAuthenticating } = useAuth();
 
+  const scrollViewRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
@@ -33,6 +36,25 @@ export default function RegisterScreen() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Track keyboard appearance to give dynamic bottom clearance on Android & iOS
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const validate = () => {
     const errs = {};
@@ -91,24 +113,30 @@ export default function RegisterScreen() {
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          ref={scrollViewRef}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 40 : 48 },
+          ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+          keyboardDismissMode="none"
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <Image
-              source={logoSource}
-              style={styles.logoImage}
-              contentFit="contain"
-            />
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>
-              Sign up to start organizing and managing your todos
-            </Text>
-          </View>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.header}>
+              <Image
+                source={logoSource}
+                style={styles.logoImage}
+                contentFit="contain"
+              />
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>
+                Sign up to start organizing and managing your todos
+              </Text>
+            </View>
+          </TouchableWithoutFeedback>
 
           {/* Server Error Banner */}
           {serverError ? (
@@ -186,6 +214,11 @@ export default function RegisterScreen() {
               returnKeyType="next"
               onSubmitEditing={() => confirmPasswordRef.current?.focus()}
               blurOnSubmit={false}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 160, animated: true });
+                }, 120);
+              }}
               error={errors.password}
             />
 
@@ -206,6 +239,11 @@ export default function RegisterScreen() {
               textContentType="newPassword"
               returnKeyType="done"
               onSubmitEditing={handleRegister}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 120);
+              }}
               error={errors.confirmPassword}
             />
 
