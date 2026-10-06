@@ -34,25 +34,6 @@ export default function TodoListScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Track keyboard height so FAB and list content lift above keyboard in standalone Android APK
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -210,9 +191,7 @@ export default function TodoListScreen() {
   // Safe area bottom insets for FAB and list padding (prevents overlap with Android system nav bar)
   const insets = useSafeAreaInsets();
   const fabBottomOffset = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 16) + 16;
-  const currentFabBottom = keyboardHeight > 0 ? keyboardHeight + 16 : fabBottomOffset;
   const listBottomPadding = fabBottomOffset + 80;
-  const currentListPadding = listBottomPadding + keyboardHeight;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -255,7 +234,7 @@ export default function TodoListScreen() {
               onDelete={handleDelete}
             />
           )}
-          contentContainerStyle={[styles.listContent, { paddingBottom: currentListPadding }]}
+          contentContainerStyle={[styles.listContent, { paddingBottom: listBottomPadding }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -373,7 +352,7 @@ export default function TodoListScreen() {
       )}
 
       {/* Floating Action Button (FAB) */}
-      <View style={[styles.fabContainer, { bottom: currentFabBottom }]} pointerEvents="box-none">
+      <View style={[styles.fabContainer, { bottom: fabBottomOffset }]} pointerEvents="box-none">
         <Pressable
           onPress={handleOpenCreate}
           style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
