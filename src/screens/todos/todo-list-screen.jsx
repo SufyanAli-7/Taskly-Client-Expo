@@ -101,12 +101,14 @@ export default function TodoListScreen() {
 
   // Open Edit Modal
   const handleOpenEdit = (todo) => {
+    Keyboard.dismiss();
     setSelectedTodo(todo);
     setModalVisible(true);
   };
 
   // Open Create Modal
   const handleOpenCreate = () => {
+    Keyboard.dismiss();
     setSelectedTodo(null);
     setModalVisible(true);
   };
@@ -190,8 +192,8 @@ export default function TodoListScreen() {
 
   // Safe area bottom insets for FAB and list padding (prevents overlap with Android system nav bar)
   const insets = useSafeAreaInsets();
-  const fabBottomOffset = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 16) + 16;
-  const listBottomPadding = fabBottomOffset + 80;
+  const baseFabBottom = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 16) + 16;
+  const listBottomPadding = baseFabBottom + 80;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -352,7 +354,7 @@ export default function TodoListScreen() {
       )}
 
       {/* Floating Action Button (FAB) */}
-      <View style={[styles.fabContainer, { bottom: fabBottomOffset }]} pointerEvents="box-none">
+      <View style={[styles.fabContainer, { bottom: baseFabBottom }]} pointerEvents="box-none">
         <Pressable
           onPress={handleOpenCreate}
           style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}

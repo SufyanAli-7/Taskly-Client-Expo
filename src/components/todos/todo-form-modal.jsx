@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -72,8 +73,9 @@ export default function TodoFormModal({
   const [existingImageUrl, setExistingImageUrl] = useState('');
   const [error, setError] = useState('');
 
-  // Safe area bottom inset for modal content (ensures submit button is above Android navigation bar)
+  // Safe area bottom inset for modal content
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef(null);
   const modalBottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 28 : 16) + 16;
 
   // Reset or populate fields when modal opens
@@ -261,10 +263,19 @@ export default function TodoFormModal({
       visible={visible}
       animationType="slide"
       transparent
-      statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.backdrop}
+      >
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={() => {
+            Keyboard.dismiss();
+            onClose();
+          }}
+        />
         <View style={styles.sheetContainer}>
           {/* Header */}
           <View style={styles.header}>
@@ -277,6 +288,7 @@ export default function TodoFormModal({
           </View>
 
           <ScrollView
+            ref={scrollViewRef}
             style={styles.scrollView}
             contentContainerStyle={[styles.scrollBody, { paddingBottom: modalBottomPadding }]}
             keyboardShouldPersistTaps="handled"
@@ -293,6 +305,11 @@ export default function TodoFormModal({
               }}
               error={error}
               autoCapitalize="sentences"
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                }, 100);
+              }}
             />
 
             {/* Description */}
@@ -304,6 +321,11 @@ export default function TodoFormModal({
               multiline
               numberOfLines={3}
               autoCapitalize="sentences"
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 110, animated: true });
+                }, 100);
+              }}
             />
 
             {/* Due Date & Time Picker */}
@@ -495,7 +517,7 @@ export default function TodoFormModal({
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
