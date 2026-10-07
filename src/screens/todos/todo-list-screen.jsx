@@ -221,8 +221,11 @@ export default function TodoListScreen() {
 
       {/* Main Content / FlatList
           KAV adds bottom padding equal to the keyboard overlap so the list
-          shrinks above the keyboard in edge-to-edge Android builds. */}
+          shrinks above the keyboard in edge-to-edge Android builds.
+          The inner wrapper shrinks with it, so the absolutely-positioned FAB
+          (anchored to the wrapper's bottom) floats above the keyboard too. */}
       <KeyboardAvoidingView behavior="padding" style={styles.listWrapper}>
+      <View style={styles.listWrapper}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -356,7 +359,6 @@ export default function TodoListScreen() {
           }
         />
       )}
-      </KeyboardAvoidingView>
 
       {/* Floating Action Button (FAB) */}
       <View style={[styles.fabContainer, { bottom: baseFabBottom }]} pointerEvents="box-none">
@@ -368,6 +370,8 @@ export default function TodoListScreen() {
           <Ionicons name="add" size={30} color={colors.textInverse} />
         </Pressable>
       </View>
+      </View>
+      </KeyboardAvoidingView>
 
       {/* Create / Edit Modal Form */}
       <TodoFormModal
