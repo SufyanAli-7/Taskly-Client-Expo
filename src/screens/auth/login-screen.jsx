@@ -76,8 +76,11 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      {/* 'padding' on Android too: standalone builds are edge-to-edge, so the
+          window no longer resizes for the keyboard. KAV measures the real overlap,
+          so it adds 0 padding where the window does resize (e.g. Expo Go). */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         style={styles.keyboardView}
       >

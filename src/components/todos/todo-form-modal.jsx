@@ -265,8 +265,10 @@ export default function TodoFormModal({
       transparent
       onRequestClose={onClose}
     >
+      {/* 'padding' on Android too: edge-to-edge builds don't resize the window
+          for the keyboard, so KAV must add the overlap as bottom padding. */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={styles.backdrop}
       >
         <Pressable
@@ -534,6 +536,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     height: '88%',
     maxHeight: '88%',
+    flexShrink: 1,
     elevation: 10,
   },
   scrollView: {

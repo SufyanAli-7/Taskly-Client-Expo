@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -218,7 +219,10 @@ export default function TodoListScreen() {
         </Pressable>
       </View>
 
-      {/* Main Content / FlatList */}
+      {/* Main Content / FlatList
+          KAV adds bottom padding equal to the keyboard overlap so the list
+          shrinks above the keyboard in edge-to-edge Android builds. */}
+      <KeyboardAvoidingView behavior="padding" style={styles.listWrapper}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -352,6 +356,7 @@ export default function TodoListScreen() {
           }
         />
       )}
+      </KeyboardAvoidingView>
 
       {/* Floating Action Button (FAB) */}
       <View style={[styles.fabContainer, { bottom: baseFabBottom }]} pointerEvents="box-none">
@@ -380,6 +385,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  listWrapper: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
