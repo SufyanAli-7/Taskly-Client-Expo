@@ -25,9 +25,22 @@ export default function RegisterScreen() {
   const { register, login, isAuthenticating } = useAuth();
 
   const scrollViewRef = useRef(null);
+  const fullNameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
+
+  const scrollToInput = (yOffset = 0) => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: yOffset, animated: true });
+    }, 80);
+  };
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 80);
+  };
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -89,14 +102,15 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         style={styles.keyboardView}
       >
         <ScrollView
           ref={scrollViewRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="none"
+          keyboardDismissMode="on-drag"
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
@@ -134,6 +148,7 @@ export default function RegisterScreen() {
           {/* Form */}
           <View style={styles.formCard}>
             <Input
+              ref={fullNameRef}
               label="Full Name"
               placeholder="e.g. Sufyan Ali"
               value={fullName}
@@ -149,6 +164,7 @@ export default function RegisterScreen() {
               returnKeyType="next"
               onSubmitEditing={() => emailRef.current?.focus()}
               blurOnSubmit={false}
+              onFocus={() => scrollToInput(0)}
               error={errors.fullName}
             />
 
@@ -168,8 +184,12 @@ export default function RegisterScreen() {
               autoComplete="email"
               textContentType="emailAddress"
               returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
+              onSubmitEditing={() => {
+                passwordRef.current?.focus();
+                scrollToInput(120);
+              }}
               blurOnSubmit={false}
+              onFocus={() => scrollToInput(60)}
               error={errors.email}
             />
 
@@ -189,8 +209,12 @@ export default function RegisterScreen() {
               autoComplete="new-password"
               textContentType="newPassword"
               returnKeyType="next"
-              onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+              onSubmitEditing={() => {
+                confirmPasswordRef.current?.focus();
+                scrollToBottom();
+              }}
               blurOnSubmit={false}
+              onFocus={() => scrollToInput(140)}
               error={errors.password}
             />
 
@@ -211,6 +235,7 @@ export default function RegisterScreen() {
               textContentType="newPassword"
               returnKeyType="done"
               onSubmitEditing={handleRegister}
+              onFocus={scrollToBottom}
               error={errors.confirmPassword}
             />
 
@@ -250,7 +275,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 36,
+    paddingBottom: 54,
   },
   header: {
     alignItems: 'center',

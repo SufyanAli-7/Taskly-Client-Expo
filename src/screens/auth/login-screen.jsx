@@ -23,8 +23,21 @@ const logoSource = require('../../../assets/Glossy 3D Task List Icon.png');
 
 export default function LoginScreen() {
   const { login, isAuthenticating } = useAuth();
+  const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const scrollViewRef = useRef(null);
+
+  const scrollToInput = (yOffset = 0) => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: yOffset, animated: true });
+    }, 80);
+  };
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 80);
+  };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,14 +77,15 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         style={styles.keyboardView}
       >
         <ScrollView
           ref={scrollViewRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="none"
+          keyboardDismissMode="on-drag"
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
@@ -101,6 +115,7 @@ export default function LoginScreen() {
           {/* Form */}
           <View style={styles.formCard}>
             <Input
+              ref={emailRef}
               label="Email Address"
               placeholder="name@example.com"
               value={email}
@@ -115,8 +130,12 @@ export default function LoginScreen() {
               autoComplete="email"
               textContentType="emailAddress"
               returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
+              onSubmitEditing={() => {
+                passwordRef.current?.focus();
+                scrollToBottom();
+              }}
               blurOnSubmit={false}
+              onFocus={() => scrollToInput(0)}
               error={errors.email}
             />
 
@@ -137,6 +156,7 @@ export default function LoginScreen() {
               textContentType="password"
               returnKeyType="done"
               onSubmitEditing={handleLogin}
+              onFocus={scrollToBottom}
               error={errors.password}
             />
 
